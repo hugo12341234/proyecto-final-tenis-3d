@@ -1,0 +1,17 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.VC.opendb
+*.ipch
+
+# Salida de compilacion (solo en la raiz y dentro del proyecto; NO afecta a External Libraries/)
+/Debug/
+/Release/
+/x64/
+/x86/
+/ProyectoTenis/Debug/
+/ProyectoTenis/Release/
+/ProyectoTenis/x64/
+/ProyectoTenis/x86/
