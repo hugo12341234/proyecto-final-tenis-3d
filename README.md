@@ -33,7 +33,7 @@ Escenario 3D interactivo de una cancha de tenis hecho con OpenGL moderno (3.3) e
 | Q / E | Girar la cámara de transmisión alrededor de la cancha |
 | Z / X | Acercar / alejar la cámara de transmisión |
 | Y H G J | Mover al jugador (adelante, atrás, izquierda, derecha); camina con animación y no puede cruzar la red |
-| L | Servicio del jugador (animación por keyframes). Al terminar suma un punto al marcador |
+| L | Servicio del jugador (animación por keyframes): al terminar suma un punto y el público festeja |
 | F | Encender / apagar los 4 reflectores |
 | N | Cambiar entre día y noche |
 | O | Encender / apagar la linterna (luz spot que sigue a la cámara) |
@@ -73,7 +73,7 @@ Convenciones de la escena: 1 unidad es 1 metro, el eje Y es hacia arriba, la red
 
 - **Terreno de juego:** cancha con las líneas reglamentarias, red y postes (modelo de Poly Pizza escalado a medidas reglamentarias).
 - **Zona de bancas:** bancas de jugadores y silla del juez (con el árbitro sentado) incluidas en el modelo de la cancha.
-- **Zona de espectadores:** gradas a ambos lados con público sentado (algunos levantan los brazos) y carteles de publicidad alrededor de la cancha.
+- **Zona de espectadores:** gradas a ambos lados con público sentado (festejan con la tecla L y al sumar un punto) y carteles de publicidad alrededor de la cancha.
 - **Ambientación:** cuatro torres de reflectores, marcador y utilería (pelotas y raqueta).
 - **Personajes:** jugador, oponente y árbitro con modelado jerárquico (torso, cabeza, brazos y piernas articulados).
 

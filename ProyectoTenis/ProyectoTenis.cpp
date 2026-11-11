@@ -575,7 +575,9 @@ int main()
 
 		// Publico: personas sentadas en las gradas, mirando hacia la cancha (usan los mismos modelos jerarquicos).
 		// Cada modulo tiene 6 filas; xFila es donde empieza cada escalon y yFila la altura del asiento.
-		// Algunas personas levantan los brazos de vez en cuando (se calcula con sin del tiempo).
+		// Cuando se reproduce el servicio (tecla L) y un instante despues del punto, el publico festeja
+		// levantando los brazos (se calcula con sin del tiempo, para que no todos suban a la vez).
+		bool festejoActivo = (play || pulso > 1.0f);
 		{
 			Figura *publico[2] = { &J2, &Arb };
 			float xFila[6] = { 0.84f, 1.49f, 2.13f, 2.77f, 3.41f, 4.06f };
@@ -587,15 +589,15 @@ int main()
 					float z0 = -6.55f + 13.1f * m;
 					for (int fila = 0; fila < 6; fila++)
 					{
-						for (int s = 0; s < 7; s++)
+						for (int s = 0; s < 5; s++)
 						{
-							int id = lado * 100 + m * 50 + fila * 7 + s;
+							int id = lado * 100 + m * 50 + fila * 5 + s;
 							if (id % 3 == 0)
 								continue;   // asiento vacio
 
 							float xl = xFila[fila] + 0.30f;      // posicion de la persona dentro del modulo
-							float zl = -4.65f + 1.55f * s;
-							bool festeja = sin(glfwGetTime() * 4.0 + id) > 0.7;
+							float zl = -4.4f + 2.2f * s;
+							bool festeja = festejoActivo && sin(glfwGetTime() * 8.0 + id) > 0.0;
 
 							Pose pp;
 							pp.y = yFila[fila] - 0.77f;          // las caderas quedan sobre el asiento
