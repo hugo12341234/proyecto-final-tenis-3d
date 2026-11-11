@@ -122,6 +122,101 @@ float vertices[] = {
 	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
 
+// Figura humana articulada (modelado jerarquico):
+// cadera -> torso -> cabeza y brazos (hombro -> codo), cadera -> piernas (cadera -> rodilla)
+struct Figura
+{
+	Model *torso;
+	Model *cabeza;
+	Model *brazo;
+	Model *antebrazo;
+	Model *muslo;
+	Model *pantorrilla;
+};
+
+// Posicion y angulos (en grados) de cada articulacion de una figura
+struct Pose
+{
+	float x, y, z, rotY;                        // posicion (pies sobre el piso) y orientacion
+	float inclTorso, rotTorsoY;                 // torso
+	float brDer, abDer, brIzq, abIzq;           // brazos: hombro y codo
+	float pierDer, rodDer, pierIzq, rodIzq;     // piernas: cadera y rodilla
+};
+
+void DibujarFigura(Figura &f, Shader &shader, Pose &p, Model *raqueta)
+{
+	GLint modelLoc = glGetUniformLocation(shader.Program, "model");
+	glm::vec3 X(1.0f, 0.0f, 0.0f), Y(0.0f, 1.0f, 0.0f);
+	glm::mat4 base, cadera, articulacion, model;
+
+	// Origen del cuerpo: los pies sobre el piso y mirando hacia +Z antes de rotar
+	base = glm::translate(glm::mat4(1), glm::vec3(p.x, p.y, p.z));
+	base = glm::rotate(base, glm::radians(p.rotY), Y);
+
+	// Pierna derecha: muslo y pantorrilla
+	articulacion = glm::translate(base, glm::vec3(-0.1f, 0.9f, 0.0f));
+	articulacion = glm::rotate(articulacion, glm::radians(p.pierDer), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(articulacion));
+	f.muslo->Draw(shader);
+	articulacion = glm::translate(articulacion, glm::vec3(0.0f, -0.42f, 0.0f));
+	articulacion = glm::rotate(articulacion, glm::radians(p.rodDer), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(articulacion));
+	f.pantorrilla->Draw(shader);
+
+	// Pierna izquierda
+	articulacion = glm::translate(base, glm::vec3(0.1f, 0.9f, 0.0f));
+	articulacion = glm::rotate(articulacion, glm::radians(p.pierIzq), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(articulacion));
+	f.muslo->Draw(shader);
+	articulacion = glm::translate(articulacion, glm::vec3(0.0f, -0.42f, 0.0f));
+	articulacion = glm::rotate(articulacion, glm::radians(p.rodIzq), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(articulacion));
+	f.pantorrilla->Draw(shader);
+
+	// Torso (de aqui cuelgan la cabeza y los brazos)
+	cadera = glm::translate(base, glm::vec3(0.0f, 0.9f, 0.0f));
+	cadera = glm::rotate(cadera, glm::radians(p.inclTorso), X);
+	cadera = glm::rotate(cadera, glm::radians(p.rotTorsoY), Y);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(cadera));
+	f.torso->Draw(shader);
+
+	// Cabeza
+	model = glm::translate(cadera, glm::vec3(0.0f, 0.6f, 0.0f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	f.cabeza->Draw(shader);
+
+	// Brazo derecho: brazo y antebrazo
+	articulacion = glm::translate(cadera, glm::vec3(-0.26f, 0.54f, 0.0f));
+	articulacion = glm::rotate(articulacion, glm::radians(p.brDer), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(articulacion));
+	f.brazo->Draw(shader);
+	articulacion = glm::translate(articulacion, glm::vec3(0.0f, -0.3f, 0.0f));
+	articulacion = glm::rotate(articulacion, glm::radians(p.abDer), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(articulacion));
+	f.antebrazo->Draw(shader);
+
+	// Brazo izquierdo
+	model = glm::translate(cadera, glm::vec3(0.26f, 0.54f, 0.0f));
+	model = glm::rotate(model, glm::radians(p.brIzq), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	f.brazo->Draw(shader);
+	model = glm::translate(model, glm::vec3(0.0f, -0.3f, 0.0f));
+	model = glm::rotate(model, glm::radians(p.abIzq), X);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	f.antebrazo->Draw(shader);
+
+	// Raqueta en la mano derecha
+	if (raqueta != nullptr)
+	{
+		model = glm::translate(articulacion, glm::vec3(0.0f, -0.31f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		raqueta->Draw(shader);
+	}
+}
+
+// Jugador 1 (el que saca): empieza detras de la linea de fondo, mirando hacia -Z
+Pose pJug = { 1.8f, 0.0f, 12.6f, 180.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f };
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -183,6 +278,15 @@ int main()
 	Model Marcador3((char*)"Models/marcador_3.obj");
 	Model Marcador4((char*)"Models/marcador_4.obj");
 	Model *Marcadores[5] = { &Marcador0, &Marcador1, &Marcador2, &Marcador3, &Marcador4 };
+
+	// Jugador 1 (figura articulada)
+	Model J1Torso((char*)"Models/j1_torso.obj");
+	Model J1Cabeza((char*)"Models/j1_cabeza.obj");
+	Model J1Brazo((char*)"Models/j1_brazo.obj");
+	Model J1Antebrazo((char*)"Models/j1_antebrazo.obj");
+	Model J1Muslo((char*)"Models/j1_muslo.obj");
+	Model J1Pantorrilla((char*)"Models/j1_pantorrilla.obj");
+	Figura J1 = { &J1Torso, &J1Cabeza, &J1Brazo, &J1Antebrazo, &J1Muslo, &J1Pantorrilla };
 
 	// Cubo para dibujar las lamparas (VAO y VBO como en las practicas)
 	GLuint VBO, VAO;
@@ -362,6 +466,9 @@ int main()
 		model = glm::translate(model, glm::vec3(0.0f, 4.5f, -19.6f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Marcadores[puntos]->Draw(lightingShader);
+
+		// Jugador 1 (modelado jerarquico)
+		DibujarFigura(J1, lightingShader, pJug, nullptr);
 
 		// Dibujar las lamparas de los reflectores
 		lampShader.Use();
