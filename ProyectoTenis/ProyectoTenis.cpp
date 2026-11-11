@@ -1,5 +1,13 @@
 // Proyecto Final - Escenario Deportivo 3D Interactivo (Tenis)
 // Computacion Grafica e Interaccion Humano-Computadora
+// Facultad de Ingenieria, UNAM - Laboratorio, grupo 09
+//
+// Convenciones de la escena:
+//   - 1 unidad = 1 metro. El eje Y es hacia arriba y el piso esta en y = 0.
+//   - La red esta en z = 0 y la cancha se extiende a lo largo del eje Z (23.77 m de largo, 10.97 m de ancho).
+//   - Las bancas y la silla del arbitro estan del lado +X; el publico, a ambos lados en X.
+//   - Cada modelo (.obj) se dibuja con la matriz "model" que se arma antes de llamar a Draw().
+//   - Todas las animaciones avanzan por cuadro (no por deltaTime), igual que en la practica 10.
 
 #include <iostream>
 #include <cmath>
@@ -10,14 +18,21 @@
 // GLFW
 #include <GLFW/glfw3.h>
 
+// Other Libs
+#include "stb_image.h"
+
 // GLM Mathematics
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+//Load Models
+#include "SOIL2/SOIL2.h"
+
 // Other includes
 #include "Shader.h"
 #include "Camera.h"
+#include "Model.h"
 
 // Function prototypes
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
@@ -29,7 +44,7 @@ const GLuint WIDTH = 800, HEIGHT = 600;
 int SCREEN_WIDTH, SCREEN_HEIGHT;
 
 // Camera
-Camera  camera(glm::vec3(0.0f, 2.0f, 10.0f));
+Camera  camera(glm::vec3(0.0f, 1.7f, 15.0f));
 GLfloat lastX = WIDTH / 2.0;
 GLfloat lastY = HEIGHT / 2.0;
 bool keys[1024];
@@ -81,7 +96,12 @@ int main()
 	Shader lightingShader("Shader/lighting.vs", "Shader/lighting.frag");
 	Shader lampShader("Shader/lamp.vs", "Shader/lamp.frag");
 
-	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 100.0f);
+	// Models (se cargan una sola vez, antes del ciclo principal)
+	// Piso: pasto de 200 x 200 m. Cancha: modelo completo con red, postes, bancas y silla del arbitro
+	Model Piso((char*)"Models/piso.obj");
+	Model Cancha((char*)"Models/cancha_tenis.obj");
+
+	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 300.0f);
 
 	// Game loop
 	while (!glfwWindowShouldClose(window))
@@ -155,6 +175,12 @@ int main()
 
 		glm::mat4 model(1);
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+		// Piso y cancha (la cancha incluye red, postes, bancas y silla del arbitro)
+		model = glm::mat4(1);
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Piso.Draw(lightingShader);
+		Cancha.Draw(lightingShader);
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
