@@ -316,6 +316,12 @@ bool caminando = false;
 float swing = 0.0f;         // angulo de las piernas al caminar
 bool pasoAdelante = true;
 
+// Camara activa: 0 primera persona, 1 transmision (orbital), 2 tercera persona (tecla C)
+int modoCamara = 0;
+float orbitaAng = 0.0f;
+float orbitaDist = 32.0f;
+float orbitaAlt = 14.0f;
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -343,6 +349,9 @@ int main()
 	// Set the required callback functions
 	glfwSetKeyCallback(window, KeyCallback);
 	glfwSetCursorPosCallback(window, MouseCallback);
+
+	// GLFW Options
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Set this to true so GLEW knows to use a modern approach to retrieving function pointers and extensions
 	glewExperimental = GL_TRUE;
@@ -457,8 +466,31 @@ int main()
 
 		glUniform1i(glGetUniformLocation(lightingShader.Program, "transparency"), 0);
 
+		// Camara activa: 0 primera persona, 1 transmision (orbital), 2 tercera persona
+		glm::mat4 view;
+		glm::vec3 posCam = camera.GetPosition();
+		glm::vec3 frenteCam = camera.GetFront();     // hacia donde apunta la linterna
+		if (modoCamara == 0)
+		{
+			view = camera.GetViewMatrix();
+		}
+		else if (modoCamara == 1)
+		{
+			posCam = glm::vec3(orbitaDist * sin(glm::radians(orbitaAng)), orbitaAlt, orbitaDist * cos(glm::radians(orbitaAng)));
+			view = glm::lookAt(posCam, glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			frenteCam = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f) - posCam);
+		}
+		else
+		{
+			glm::vec3 adelante(sin(glm::radians(pJug.rotY)), 0.0f, cos(glm::radians(pJug.rotY)));
+			glm::vec3 jugador(pJug.x, pJug.y, pJug.z);
+			posCam = jugador - adelante * 4.5f + glm::vec3(0.0f, 2.4f, 0.0f);
+			view = glm::lookAt(posCam, jugador + glm::vec3(0.0f, 1.2f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			frenteCam = glm::normalize(jugador + glm::vec3(0.0f, 1.2f, 0.0f) - posCam);
+		}
+
 		GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
-		glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
+		glUniform3f(viewPosLoc, posCam.x, posCam.y, posCam.z);
 
 		// Directional light (luz del dia; de noche casi no hay luz)
 		float luzDia = esDia ? 1.0f : 0.08f;
@@ -483,8 +515,8 @@ int main()
 
 		// SpotLight: linterna de la camara (tecla O la enciende y la apaga)
 		float luzLinterna = linternaOn ? 1.0f : 0.0f;
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), camera.GetFront().x, camera.GetFront().y, camera.GetFront().z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), posCam.x, posCam.y, posCam.z);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), frenteCam.x, frenteCam.y, frenteCam.z);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.ambient"), 0.0f, 0.0f, 0.0f);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 1.0f * luzLinterna, 0.95f * luzLinterna, 0.8f * luzLinterna);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.specular"), 1.0f * luzLinterna, 1.0f * luzLinterna, 1.0f * luzLinterna);
@@ -497,9 +529,7 @@ int main()
 		// Set material properties
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "material.shininess"), 5.0f);
 
-		// Create camera transformations
-		glm::mat4 view;
-		view = camera.GetViewMatrix();
+		// Create camera transformations (view se calculo arriba segun la camara activa)
 
 		// Get the uniform locations
 		GLint modelLoc = glGetUniformLocation(lightingShader.Program, "model");
@@ -671,23 +701,36 @@ void DoMovement()
 		if (pJug.z < -16.0f) pJug.z = -16.0f;
 	}
 
+	// Camara de transmision: Q y E la giran alrededor de la cancha, Z y X la acercan o la alejan
+	if (modoCamara == 1)
+	{
+		if (keys[GLFW_KEY_Q])
+			orbitaAng -= 0.8f;
+		if (keys[GLFW_KEY_E])
+			orbitaAng += 0.8f;
+		if (keys[GLFW_KEY_Z] && orbitaDist > 12.0f)
+			orbitaDist -= 0.2f;
+		if (keys[GLFW_KEY_X] && orbitaDist < 60.0f)
+			orbitaDist += 0.2f;
+	}
+
 	// Camera controls
-	if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP])
+	if (modoCamara == 0 && (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP]))
 	{
 		camera.ProcessKeyboard(FORWARD, deltaTime);
 	}
 
-	if (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN])
+	if (modoCamara == 0 && (keys[GLFW_KEY_S] || keys[GLFW_KEY_DOWN]))
 	{
 		camera.ProcessKeyboard(BACKWARD, deltaTime);
 	}
 
-	if (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT])
+	if (modoCamara == 0 && (keys[GLFW_KEY_A] || keys[GLFW_KEY_LEFT]))
 	{
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	}
 
-	if (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT])
+	if (modoCamara == 0 && (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT]))
 	{
 		camera.ProcessKeyboard(RIGHT, deltaTime);
 	}
@@ -742,6 +785,18 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 		{
 			play = false;
 		}
+	}
+
+	// C: cambia de camara (primera persona, transmision orbital y tercera persona)
+	if (GLFW_KEY_C == key && GLFW_PRESS == action)
+	{
+		modoCamara = (modoCamara + 1) % 3;
+		if (modoCamara == 0)
+			std::cout << "Camara: primera persona (W A S D y mouse)" << std::endl;
+		if (modoCamara == 1)
+			std::cout << "Camara: transmision orbital (Q E giran, Z X acercan)" << std::endl;
+		if (modoCamara == 2)
+			std::cout << "Camara: tercera persona (sigue al jugador)" << std::endl;
 	}
 
 	if (key >= 0 && key < 1024)
