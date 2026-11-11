@@ -73,7 +73,7 @@ Convenciones de la escena: 1 unidad es 1 metro, el eje Y es hacia arriba, la red
 
 - **Terreno de juego:** cancha con las líneas reglamentarias, red y postes (modelo de Poly Pizza escalado a medidas reglamentarias).
 - **Zona de bancas:** bancas de jugadores y silla del juez (con el árbitro sentado) incluidas en el modelo de la cancha.
-- **Zona de espectadores:** gradas a ambos lados y carteles de publicidad alrededor de la cancha.
+- **Zona de espectadores:** gradas a ambos lados con público sentado (algunos levantan los brazos) y carteles de publicidad alrededor de la cancha.
 - **Ambientación:** cuatro torres de reflectores, marcador y utilería (pelotas y raqueta).
 - **Personajes:** jugador, oponente y árbitro con modelado jerárquico (torso, cabeza, brazos y piernas articulados).
 

@@ -573,6 +573,61 @@ int main()
 			Gradas.Draw(lightingShader);
 		}
 
+		// Publico: personas sentadas en las gradas, mirando hacia la cancha (usan los mismos modelos jerarquicos).
+		// Cada modulo tiene 6 filas; xFila es donde empieza cada escalon y yFila la altura del asiento.
+		// Algunas personas levantan los brazos de vez en cuando (se calcula con sin del tiempo).
+		{
+			Figura *publico[2] = { &J2, &Arb };
+			float xFila[6] = { 0.84f, 1.49f, 2.13f, 2.77f, 3.41f, 4.06f };
+			float yFila[6] = { 1.41f, 1.83f, 2.24f, 2.65f, 3.07f, 3.48f };
+			for (int lado = 0; lado < 2; lado++)
+			{
+				for (int m = 0; m < 2; m++)
+				{
+					float z0 = -6.55f + 13.1f * m;
+					for (int fila = 0; fila < 6; fila++)
+					{
+						for (int s = 0; s < 7; s++)
+						{
+							int id = lado * 100 + m * 50 + fila * 7 + s;
+							if (id % 3 == 0)
+								continue;   // asiento vacio
+
+							float xl = xFila[fila] + 0.30f;      // posicion de la persona dentro del modulo
+							float zl = -4.65f + 1.55f * s;
+							bool festeja = sin(glfwGetTime() * 4.0 + id) > 0.7;
+
+							Pose pp;
+							pp.y = yFila[fila] - 0.77f;          // las caderas quedan sobre el asiento
+							if (lado == 0)
+							{
+								pp.x = 13.3f + xl;
+								pp.z = z0 + zl;
+								pp.rotY = -90.0f;
+							}
+							else
+							{
+								pp.x = -(13.3f + xl);
+								pp.z = -(z0 + zl);
+								pp.rotY = 90.0f;
+							}
+							pp.inclTorso = 0.0f;
+							pp.rotTorsoY = 0.0f;
+							pp.brDer = festeja ? -150.0f : -40.0f;
+							pp.abDer = festeja ? -10.0f : -45.0f;
+							pp.brIzq = festeja ? -150.0f : -40.0f;
+							pp.abIzq = festeja ? -10.0f : -45.0f;
+							pp.pierDer = -90.0f;                 // sentado: muslos al frente y rodillas dobladas
+							pp.rodDer = 90.0f;
+							pp.pierIzq = -90.0f;
+							pp.rodIzq = 90.0f;
+							DibujarFigura(*publico[id % 2], lightingShader, pp, nullptr);
+						}
+					}
+				}
+			}
+		}
+
 		// Carteles de publicidad: 9 en cada fondo y 9 en cada costado, rotados para mirar hacia la cancha.
 		// Se alternan los tres anuncios (tablero_1, tablero_2 y tablero_3) con el operador % 3.
 		for (int i = 0; i < 9; i++)
