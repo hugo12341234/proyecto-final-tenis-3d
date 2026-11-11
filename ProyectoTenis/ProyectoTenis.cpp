@@ -217,6 +217,9 @@ void DibujarFigura(Figura &f, Shader &shader, Pose &p, Model *raqueta)
 // Jugador 1 (el que saca): empieza detras de la linea de fondo, mirando hacia -Z
 Pose pJug = { 1.8f, 0.0f, 12.6f, 180.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f };
 
+// Pelota (empieza en la mano izquierda del jugador)
+float pelX = 1.54f, pelY = 0.83f, pelZ = 12.6f;
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -287,6 +290,10 @@ int main()
 	Model J1Muslo((char*)"Models/j1_muslo.obj");
 	Model J1Pantorrilla((char*)"Models/j1_pantorrilla.obj");
 	Figura J1 = { &J1Torso, &J1Cabeza, &J1Brazo, &J1Antebrazo, &J1Muslo, &J1Pantorrilla };
+
+	// Raqueta y pelota
+	Model Raqueta((char*)"Models/raqueta.obj");
+	Model Pelota((char*)"Models/pelota.obj");
 
 	// Cubo para dibujar las lamparas (VAO y VBO como en las practicas)
 	GLuint VBO, VAO;
@@ -468,7 +475,12 @@ int main()
 		Marcadores[puntos]->Draw(lightingShader);
 
 		// Jugador 1 (modelado jerarquico)
-		DibujarFigura(J1, lightingShader, pJug, nullptr);
+		DibujarFigura(J1, lightingShader, pJug, &Raqueta);
+
+		// Pelota
+		model = glm::translate(glm::mat4(1), glm::vec3(pelX, pelY, pelZ));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Pelota.Draw(lightingShader);
 
 		// Dibujar las lamparas de los reflectores
 		lampShader.Use();

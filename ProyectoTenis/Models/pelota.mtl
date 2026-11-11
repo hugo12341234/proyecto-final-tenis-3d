@@ -1,0 +1,3 @@
+newmtl phong1SG
+Kd 1 1 1
+map_Kd pelota_tenis.png

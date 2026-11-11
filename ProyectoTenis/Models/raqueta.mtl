@@ -1,0 +1,11 @@
+newmtl default
+Kd 1 1 1
+map_Kd c_blanco.png
+
+newmtl Mat.2
+Kd 1 1 1
+map_Kd c_naranja.png
+
+newmtl None
+Kd 1 1 1
+map_Kd c_negro.png
