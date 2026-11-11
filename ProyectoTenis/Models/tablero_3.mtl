@@ -1,0 +1,11 @@
+newmtl Material
+Kd 1 1 1
+map_Kd anuncio_3.png
+
+newmtl Old_White_Metal
+Kd 1 1 1
+map_Kd c_gris.png
+
+newmtl Wood_Black_UA
+Kd 1 1 1
+map_Kd c_negro.png

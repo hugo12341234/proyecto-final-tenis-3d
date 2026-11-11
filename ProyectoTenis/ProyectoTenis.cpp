@@ -101,6 +101,10 @@ int main()
 	Model Piso((char*)"Models/piso.obj");
 	Model Cancha((char*)"Models/cancha_tenis.obj");
 	Model Gradas((char*)"Models/gradas.obj");
+	Model Tablero1((char*)"Models/tablero_1.obj");
+	Model Tablero2((char*)"Models/tablero_2.obj");
+	Model Tablero3((char*)"Models/tablero_3.obj");
+	Model *Tableros[3] = { &Tablero1, &Tablero2, &Tablero3 };
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 300.0f);
 
@@ -199,6 +203,44 @@ int main()
 			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 			Gradas.Draw(lightingShader);
+		}
+
+		// Carteles de publicidad: 9 en cada fondo y 9 en cada costado, rotados para mirar hacia la cancha.
+		// Se alternan los tres anuncios (tablero_1, tablero_2 y tablero_3) con el operador % 3.
+		for (int i = 0; i < 9; i++)
+		{
+			float x = -10.0f + 2.5f * i;
+
+			// Fondo lejano
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(x, 0.0f, -17.2f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Tableros[i % 3]->Draw(lightingShader);
+
+			// Fondo cercano
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(x, 0.0f, 17.2f));
+			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Tableros[(i + 1) % 3]->Draw(lightingShader);
+		}
+		for (int i = 0; i < 9; i++)
+		{
+			float z = -15.0f + 3.75f * i;
+
+			// Lado izquierdo
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(-11.9f, 0.0f, z));
+			model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Tableros[(i + 2) % 3]->Draw(lightingShader);
+
+			// Lado derecho
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(11.9f, 0.0f, z));
+			model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Tableros[i % 3]->Draw(lightingShader);
 		}
 
 		// Swap the screen buffers
