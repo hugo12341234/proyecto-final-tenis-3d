@@ -220,6 +220,12 @@ Pose pJug = { 1.8f, 0.0f, 12.6f, 180.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f, 0.0f,
 // Pelota (empieza en la mano izquierda del jugador)
 float pelX = 1.54f, pelY = 0.83f, pelZ = 12.6f;
 
+// Oponente (del otro lado de la red, mirando hacia +Z, con la raqueta lista)
+Pose pOpp = { -1.5f, 0.0f, -13.2f, 0.0f,   10.0f, 0.0f,   -35.0f, -15.0f, -20.0f, -10.0f,   0.0f, 0.0f, 0.0f, 0.0f };
+
+// Arbitro sentado en la silla (muslos al frente y rodillas dobladas)
+Pose pArb = { 8.4f, 1.05f, 0.0f, -90.0f,   0.0f, 0.0f,   -40.0f, -45.0f, -40.0f, -45.0f,   -90.0f, 90.0f, -90.0f, 90.0f };
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -294,6 +300,24 @@ int main()
 	// Raqueta y pelota
 	Model Raqueta((char*)"Models/raqueta.obj");
 	Model Pelota((char*)"Models/pelota.obj");
+
+	// Oponente
+	Model J2Torso((char*)"Models/j2_torso.obj");
+	Model J2Cabeza((char*)"Models/j2_cabeza.obj");
+	Model J2Brazo((char*)"Models/j2_brazo.obj");
+	Model J2Antebrazo((char*)"Models/j2_antebrazo.obj");
+	Model J2Muslo((char*)"Models/j2_muslo.obj");
+	Model J2Pantorrilla((char*)"Models/j2_pantorrilla.obj");
+	Figura J2 = { &J2Torso, &J2Cabeza, &J2Brazo, &J2Antebrazo, &J2Muslo, &J2Pantorrilla };
+
+	// Arbitro
+	Model ArbTorso((char*)"Models/arb_torso.obj");
+	Model ArbCabeza((char*)"Models/arb_cabeza.obj");
+	Model ArbBrazo((char*)"Models/arb_brazo.obj");
+	Model ArbAntebrazo((char*)"Models/arb_antebrazo.obj");
+	Model ArbMuslo((char*)"Models/arb_muslo.obj");
+	Model ArbPantorrilla((char*)"Models/arb_pantorrilla.obj");
+	Figura Arb = { &ArbTorso, &ArbCabeza, &ArbBrazo, &ArbAntebrazo, &ArbMuslo, &ArbPantorrilla };
 
 	// Cubo para dibujar las lamparas (VAO y VBO como en las practicas)
 	GLuint VBO, VAO;
@@ -481,6 +505,10 @@ int main()
 		model = glm::translate(glm::mat4(1), glm::vec3(pelX, pelY, pelZ));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Pelota.Draw(lightingShader);
+
+		// Oponente y arbitro
+		DibujarFigura(J2, lightingShader, pOpp, &Raqueta);
+		DibujarFigura(Arb, lightingShader, pArb, nullptr);
 
 		// Dibujar las lamparas de los reflectores
 		lampShader.Use();
