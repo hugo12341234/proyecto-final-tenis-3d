@@ -38,6 +38,7 @@
 void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void MouseCallback(GLFWwindow *window, double xPos, double yPos);
 void DoMovement();
+void Animation();
 
 // Window dimensions
 const GLuint WIDTH = 800, HEIGHT = 600;
@@ -226,6 +227,90 @@ Pose pOpp = { -1.5f, 0.0f, -13.2f, 0.0f,   10.0f, 0.0f,   -35.0f, -15.0f, -20.0f
 // Arbitro sentado en la silla (muslos al frente y rodillas dobladas)
 Pose pArb = { 8.4f, 1.05f, 0.0f, -90.0f,   0.0f, 0.0f,   -40.0f, -45.0f, -40.0f, -45.0f,   -90.0f, 90.0f, -90.0f, 90.0f };
 
+// KeyFrames: animacion del servicio (misma estructura que la practica 10)
+#define MAX_FRAMES 9
+int i_max_steps = 70;
+int i_curr_steps = 0;
+typedef struct _frame {
+	// Valores en el frame
+	float x, y, z;                              // posicion del jugador
+	float brDer, abDer, brIzq, inclTorso;       // brazos y torso del jugador
+	float pelX, pelY, pelZ;                     // posicion de la pelota
+	// Incrementos por paso
+	float incX, incY, incZ;
+	float incBrDer, incAbDer, incBrIzq, incInclTorso;
+	float incPelX, incPelY, incPelZ;
+}FRAME;
+
+FRAME KeyFrame[MAX_FRAMES];
+int FrameIndex = MAX_FRAMES;
+bool play = false;
+int playIndex = 0;
+
+// Guarda los valores de un frame
+void frame(int i, float x, float y, float z, float brDer, float abDer, float brIzq, float inclTorso, float pelX, float pelY, float pelZ)
+{
+	KeyFrame[i].x = x;
+	KeyFrame[i].y = y;
+	KeyFrame[i].z = z;
+	KeyFrame[i].brDer = brDer;
+	KeyFrame[i].abDer = abDer;
+	KeyFrame[i].brIzq = brIzq;
+	KeyFrame[i].inclTorso = inclTorso;
+	KeyFrame[i].pelX = pelX;
+	KeyFrame[i].pelY = pelY;
+	KeyFrame[i].pelZ = pelZ;
+}
+
+// Los 9 frames del servicio: preparacion, lanzamiento de la pelota, golpe, seguimiento y bote en el cuadro de saque
+void cargarServicio(void)
+{
+	//     frame   x       y       z       brDer     abDer     brIzq     inclTorso   pelota (x, y, z)
+	frame(0, 1.8f, 0.0f, 12.6f,   0.0f, 0.0f, 0.0f, 0.0f,   1.54f, 0.83f, 12.6f);
+	frame(1, 1.8f, 0.0f, 12.6f,   25.0f, 15.0f, -70.0f, -5.0f,   1.54f, 1.28f, 12.058f);
+	frame(2, 1.8f, 0.0f, 12.5f,   -50.0f, 80.0f, -165.0f, -12.0f,   1.54f, 2.587f, 12.58f);
+	frame(3, 1.8f, 0.0f, 12.4f,   -100.0f, 105.0f, -150.0f, -15.0f,   2.06f, 3.074f, 11.923f);
+	frame(4, 1.8f, 0.15f, 12.3f,   -170.0f, 0.0f, -60.0f, 8.0f,   2.06f, 2.574f, 11.903f);
+	frame(5, 1.8f, 0.0f, 11.9f,   -40.0f, 20.0f, 10.0f, 25.0f,   -0.66f, 1.45f, 0.0f);
+	frame(6, 1.8f, 0.0f, 11.9f,   -10.0f, 10.0f, 5.0f, 10.0f,   -2.0f, 0.08f, -5.9f);
+	frame(7, 1.8f, 0.0f, 11.9f,   0.0f, 0.0f, 0.0f, 0.0f,   -2.5f, 1.0f, -9.0f);
+	frame(8, 1.8f, 0.0f, 11.9f,   0.0f, 0.0f, 0.0f, 0.0f,   -2.9f, 0.08f, -12.8f);
+}
+
+void resetElements(void)
+{
+	pJug.x = KeyFrame[0].x;
+	pJug.y = KeyFrame[0].y;
+	pJug.z = KeyFrame[0].z;
+	pJug.rotY = 180.0f;
+	pJug.brDer = KeyFrame[0].brDer;
+	pJug.abDer = KeyFrame[0].abDer;
+	pJug.brIzq = KeyFrame[0].brIzq;
+	pJug.inclTorso = KeyFrame[0].inclTorso;
+	// Piernas rectas al iniciar el servicio (por si el jugador venia caminando)
+	pJug.pierDer = 0.0f;
+	pJug.pierIzq = 0.0f;
+	pJug.rodDer = 0.0f;
+	pJug.rodIzq = 0.0f;
+	pelX = KeyFrame[0].pelX;
+	pelY = KeyFrame[0].pelY;
+	pelZ = KeyFrame[0].pelZ;
+}
+
+void interpolation(void)
+{
+	KeyFrame[playIndex].incX = (KeyFrame[playIndex + 1].x - KeyFrame[playIndex].x) / i_max_steps;
+	KeyFrame[playIndex].incY = (KeyFrame[playIndex + 1].y - KeyFrame[playIndex].y) / i_max_steps;
+	KeyFrame[playIndex].incZ = (KeyFrame[playIndex + 1].z - KeyFrame[playIndex].z) / i_max_steps;
+	KeyFrame[playIndex].incBrDer = (KeyFrame[playIndex + 1].brDer - KeyFrame[playIndex].brDer) / i_max_steps;
+	KeyFrame[playIndex].incAbDer = (KeyFrame[playIndex + 1].abDer - KeyFrame[playIndex].abDer) / i_max_steps;
+	KeyFrame[playIndex].incBrIzq = (KeyFrame[playIndex + 1].brIzq - KeyFrame[playIndex].brIzq) / i_max_steps;
+	KeyFrame[playIndex].incInclTorso = (KeyFrame[playIndex + 1].inclTorso - KeyFrame[playIndex].inclTorso) / i_max_steps;
+	KeyFrame[playIndex].incPelX = (KeyFrame[playIndex + 1].pelX - KeyFrame[playIndex].pelX) / i_max_steps;
+	KeyFrame[playIndex].incPelY = (KeyFrame[playIndex + 1].pelY - KeyFrame[playIndex].pelY) / i_max_steps;
+	KeyFrame[playIndex].incPelZ = (KeyFrame[playIndex + 1].pelZ - KeyFrame[playIndex].pelZ) / i_max_steps;
+}
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -336,6 +421,9 @@ int main()
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 300.0f);
 
+	// Frames de la animacion del servicio
+	cargarServicio();
+
 	// Game loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -347,6 +435,7 @@ int main()
 		// Check if any events have been activiated (key pressed, mouse moved etc.) and call corresponding response functions
 		glfwPollEvents();
 		DoMovement();
+		Animation();
 
 		// Clear the colorbuffer
 		if (esDia)
@@ -595,6 +684,25 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 		puntos = (puntos + 1) % 5;
 	}
 
+	// L: reproduce la animacion del servicio (como en la practica 10)
+	if (GLFW_KEY_L == key && GLFW_PRESS == action)
+	{
+		if (play == false)
+		{
+			resetElements();
+			//First Interpolation
+			interpolation();
+
+			play = true;
+			playIndex = 0;
+			i_curr_steps = 0;
+		}
+		else
+		{
+			play = false;
+		}
+	}
+
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
@@ -605,6 +713,52 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 		{
 			keys[key] = false;
 		}
+	}
+}
+
+void Animation()
+{
+	if (play)
+	{
+		if (i_curr_steps >= i_max_steps) //end of animation between frames?
+		{
+			playIndex++;
+			if (playIndex > FrameIndex - 2)    //end of total animation?
+			{
+				std::cout << "termina anim" << std::endl;
+				playIndex = 0;
+				play = false;
+			}
+			else //Next frame interpolations
+			{
+				i_curr_steps = 0; //Reset counter
+				//Interpolation
+				interpolation();
+			}
+		}
+		else
+		{
+			//Draw animation
+			pJug.x += KeyFrame[playIndex].incX;
+			pJug.y += KeyFrame[playIndex].incY;
+			pJug.z += KeyFrame[playIndex].incZ;
+			pJug.brDer += KeyFrame[playIndex].incBrDer;
+			pJug.abDer += KeyFrame[playIndex].incAbDer;
+			pJug.brIzq += KeyFrame[playIndex].incBrIzq;
+			pJug.inclTorso += KeyFrame[playIndex].incInclTorso;
+			pelX += KeyFrame[playIndex].incPelX;
+			pelY += KeyFrame[playIndex].incPelY;
+			pelZ += KeyFrame[playIndex].incPelZ;
+			i_curr_steps++;
+		}
+	}
+	else
+	{
+		// Antes de sacar, la pelota va en la mano izquierda del jugador
+		float r = glm::radians(pJug.rotY);
+		pelX = pJug.x + 0.26f * cos(r);
+		pelY = pJug.y + 0.83f;
+		pelZ = pJug.z - 0.26f * sin(r);
 	}
 }
 
