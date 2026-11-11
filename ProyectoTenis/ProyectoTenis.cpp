@@ -322,6 +322,12 @@ float orbitaAng = 0.0f;
 float orbitaDist = 32.0f;
 float orbitaAlt = 14.0f;
 
+// Animaciones basicas por transformaciones
+float rotPelota = 0.0f;     // rotacion de la pelota
+float swayOpp = 0.0f;       // balanceo del oponente
+bool swayDir = true;
+float pulso = 1.0f;         // escala del marcador al sumar un punto
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -619,6 +625,7 @@ int main()
 		// Marcador (muestra los puntos del jugador 1)
 		model = glm::mat4(1);
 		model = glm::translate(model, glm::vec3(0.0f, 4.5f, -19.6f));
+		model = glm::scale(model, glm::vec3(pulso));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Marcadores[puntos]->Draw(lightingShader);
 
@@ -627,12 +634,25 @@ int main()
 
 		// Pelota
 		model = glm::translate(glm::mat4(1), glm::vec3(pelX, pelY, pelZ));
+		model = glm::rotate(model, glm::radians(rotPelota), glm::vec3(0.0f, 1.0f, 0.0f));
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Pelota.Draw(lightingShader);
 
 		// Oponente y arbitro
 		DibujarFigura(J2, lightingShader, pOpp, &Raqueta);
 		DibujarFigura(Arb, lightingShader, pArb, nullptr);
+
+		// Utileria: tres pelotas en el piso y una raqueta sobre una banca
+		for (int i = 0; i < 3; i++)
+		{
+			model = glm::translate(glm::mat4(1), glm::vec3(-3.0f + 1.5f * i, 0.08f, 13.5f - 0.7f * i));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Pelota.Draw(lightingShader);
+		}
+		model = glm::translate(glm::mat4(1), glm::vec3(10.5f, 0.75f, 5.3f));
+		model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Raqueta.Draw(lightingShader);
 
 		// Dibujar las lamparas de los reflectores
 		lampShader.Use();
@@ -766,6 +786,7 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	if (GLFW_KEY_M == key && GLFW_PRESS == action)
 	{
 		puntos = (puntos + 1) % 5;
+		pulso = 1.25f;
 	}
 
 	// L: reproduce la animacion del servicio (como en la practica 10)
@@ -814,6 +835,28 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 
 void Animation()
 {
+	// Animaciones basicas: rotacion de la pelota, balanceo del oponente y escala del marcador
+	rotPelota += 0.8f;
+	if (swayDir)
+	{
+		swayOpp += 0.15f;
+		if (swayOpp > 12.0f)
+			swayDir = false;
+	}
+	else
+	{
+		swayOpp -= 0.15f;
+		if (swayOpp < -12.0f)
+			swayDir = true;
+	}
+	pOpp.rotTorsoY = swayOpp;
+	if (pulso > 1.0f)
+	{
+		pulso -= 0.004f;
+		if (pulso < 1.0f)
+			pulso = 1.0f;
+	}
+
 	if (play)
 	{
 		if (i_curr_steps >= i_max_steps) //end of animation between frames?
