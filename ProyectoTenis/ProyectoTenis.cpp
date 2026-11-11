@@ -50,8 +50,68 @@ GLfloat lastY = HEIGHT / 2.0;
 bool keys[1024];
 bool firstMouse = true;
 
-// Position of the point light
-glm::vec3 pointLightPosition(0.0f, 5.0f, 0.0f);
+// Positions of the point lights (los 4 reflectores, uno en cada torre)
+glm::vec3 pointLightPositions[] = {
+	glm::vec3(15.7f, 10.8f, 20.2f),
+	glm::vec3(-15.7f, 10.8f, 20.2f),
+	glm::vec3(15.7f, 10.8f, -20.2f),
+	glm::vec3(-15.7f, 10.8f, -20.2f)
+};
+
+// Posiciones de las torres de reflectores
+glm::vec3 torrePos[] = {
+	glm::vec3(16.5f, 0.0f, 21.0f),
+	glm::vec3(-16.5f, 0.0f, 21.0f),
+	glm::vec3(16.5f, 0.0f, -21.0f),
+	glm::vec3(-16.5f, 0.0f, -21.0f)
+};
+
+// Reflectores encendidos (tecla F)
+bool lucesOn = false;
+
+float vertices[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+};
 
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
@@ -105,6 +165,22 @@ int main()
 	Model Tablero2((char*)"Models/tablero_2.obj");
 	Model Tablero3((char*)"Models/tablero_3.obj");
 	Model *Tableros[3] = { &Tablero1, &Tablero2, &Tablero3 };
+	Model Torre((char*)"Models/torre.obj");
+
+	// Cubo para dibujar las lamparas (VAO y VBO como en las practicas)
+	GLuint VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	// Position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+	// normal attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	glBindVertexArray(0);
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 300.0f);
 
@@ -141,14 +217,19 @@ int main()
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.6f, 0.6f, 0.6f);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"), 0.3f, 0.3f, 0.3f);
 
-		// Point light 1 (apagada por ahora)
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].position"), pointLightPosition.x, pointLightPosition.y, pointLightPosition.z);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].ambient"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "pointLights[0].specular"), 0.0f, 0.0f, 0.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].linear"), 0.045f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "pointLights[0].quadratic"), 0.075f);
+		// Point lights: los 4 reflectores de las torres (tecla F los enciende y apaga)
+		float luz = lucesOn ? 1.0f : 0.0f;
+		for (int i = 0; i < 4; i++)
+		{
+			std::string luzI = "pointLights[" + std::to_string(i) + "]";
+			glUniform3f(glGetUniformLocation(lightingShader.Program, (luzI + ".position").c_str()), pointLightPositions[i].x, pointLightPositions[i].y, pointLightPositions[i].z);
+			glUniform3f(glGetUniformLocation(lightingShader.Program, (luzI + ".ambient").c_str()), 0.15f * luz, 0.15f * luz, 0.13f * luz);
+			glUniform3f(glGetUniformLocation(lightingShader.Program, (luzI + ".diffuse").c_str()), 0.9f * luz, 0.9f * luz, 0.8f * luz);
+			glUniform3f(glGetUniformLocation(lightingShader.Program, (luzI + ".specular").c_str()), 0.5f * luz, 0.5f * luz, 0.45f * luz);
+			glUniform1f(glGetUniformLocation(lightingShader.Program, (luzI + ".constant").c_str()), 1.0f);
+			glUniform1f(glGetUniformLocation(lightingShader.Program, (luzI + ".linear").c_str()), 0.022f);
+			glUniform1f(glGetUniformLocation(lightingShader.Program, (luzI + ".quadratic").c_str()), 0.0019f);
+		}
 
 		// SpotLight (apagada por ahora)
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
@@ -243,6 +324,35 @@ int main()
 			Tableros[i % 3]->Draw(lightingShader);
 		}
 
+		// Torres de reflectores en las cuatro esquinas (miran hacia el centro de la cancha).
+		// atan2 calcula el angulo que hay que girar cada torre sobre Y para encarar el origen.
+		for (int i = 0; i < 4; i++)
+		{
+			model = glm::mat4(1);
+			model = glm::translate(model, torrePos[i]);
+			model = glm::rotate(model, atan2(-torrePos[i].x, -torrePos[i].z), glm::vec3(0.0f, 1.0f, 0.0f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Torre.Draw(lightingShader);
+		}
+
+		// Dibujar las lamparas de los reflectores
+		lampShader.Use();
+		modelLoc = glGetUniformLocation(lampShader.Program, "model");
+		viewLoc = glGetUniformLocation(lampShader.Program, "view");
+		projLoc = glGetUniformLocation(lampShader.Program, "projection");
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+		glBindVertexArray(VAO);
+		for (int i = 0; i < 4; i++)
+		{
+			model = glm::mat4(1);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(0.6f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
+		glBindVertexArray(0);
+
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
 	}
@@ -284,6 +394,12 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	if (GLFW_KEY_ESCAPE == key && GLFW_PRESS == action)
 	{
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	}
+
+	// F: enciende o apaga los 4 reflectores de las torres
+	if (GLFW_KEY_F == key && GLFW_PRESS == action)
+	{
+		lucesOn = !lucesOn;
 	}
 
 	if (key >= 0 && key < 1024)
