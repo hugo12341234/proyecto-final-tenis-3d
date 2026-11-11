@@ -100,6 +100,7 @@ int main()
 	// Piso: pasto de 200 x 200 m. Cancha: modelo completo con red, postes, bancas y silla del arbitro
 	Model Piso((char*)"Models/piso.obj");
 	Model Cancha((char*)"Models/cancha_tenis.obj");
+	Model Gradas((char*)"Models/gradas.obj");
 
 	glm::mat4 projection = glm::perspective(camera.GetZoom(), (GLfloat)SCREEN_WIDTH / (GLfloat)SCREEN_HEIGHT, 0.1f, 300.0f);
 
@@ -181,6 +182,24 @@ int main()
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 		Piso.Draw(lightingShader);
 		Cancha.Draw(lightingShader);
+
+		// Zona de espectadores: cada modulo mide 13.1 m de largo, asi que dos modulos cubren 26 m por lado.
+		// El lado -X es el mismo modulo girado 180 grados sobre Y.
+		for (int i = 0; i < 2; i++)
+		{
+			float z = -6.55f + 13.1f * i;
+
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(13.3f, 0.0f, z));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Gradas.Draw(lightingShader);
+
+			model = glm::mat4(1);
+			model = glm::translate(model, glm::vec3(-13.3f, 0.0f, -z));
+			model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+			Gradas.Draw(lightingShader);
+		}
 
 		// Swap the screen buffers
 		glfwSwapBuffers(window);
