@@ -69,6 +69,9 @@ glm::vec3 torrePos[] = {
 // Reflectores encendidos (tecla F)
 bool lucesOn = false;
 
+// Dia o noche (tecla N)
+bool esDia = true;
+
 float vertices[] = {
 	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -197,7 +200,10 @@ int main()
 		DoMovement();
 
 		// Clear the colorbuffer
-		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		if (esDia)
+			glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
+		else
+			glClearColor(0.02f, 0.02f, 0.08f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// OpenGL options
@@ -211,11 +217,12 @@ int main()
 		GLint viewPosLoc = glGetUniformLocation(lightingShader.Program, "viewPos");
 		glUniform3f(viewPosLoc, camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 
-		// Directional light (luz del dia)
+		// Directional light (luz del dia; de noche casi no hay luz)
+		float luzDia = esDia ? 1.0f : 0.08f;
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.direction"), -0.2f, -1.0f, -0.3f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.6f, 0.6f, 0.6f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.6f, 0.6f, 0.6f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"), 0.3f, 0.3f, 0.3f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.ambient"), 0.6f * luzDia, 0.6f * luzDia, 0.6f * luzDia);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.diffuse"), 0.6f * luzDia, 0.6f * luzDia, 0.6f * luzDia);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "dirLight.specular"), 0.3f * luzDia, 0.3f * luzDia, 0.3f * luzDia);
 
 		// Point lights: los 4 reflectores de las torres (tecla F los enciende y apaga)
 		float luz = lucesOn ? 1.0f : 0.0f;
@@ -400,6 +407,12 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	if (GLFW_KEY_F == key && GLFW_PRESS == action)
 	{
 		lucesOn = !lucesOn;
+	}
+
+	// N: cambia entre dia y noche (luz direccional y color del fondo)
+	if (GLFW_KEY_N == key && GLFW_PRESS == action)
+	{
+		esDia = !esDia;
 	}
 
 	if (key >= 0 && key < 1024)
