@@ -125,6 +125,12 @@ public:
 		return this->position;
 	}
 
+	// Coloca la camara en una posicion (se usa para que no atraviese la red ni el piso)
+	void SetPosition(glm::vec3 nuevaPos)
+	{
+		this->position = nuevaPos;
+	}
+
 	glm::vec3 GetFront()
 	{
 		return this->front;

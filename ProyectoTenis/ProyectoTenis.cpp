@@ -718,7 +718,7 @@ void DoMovement()
 		if (pJug.x > 7.4f) pJug.x = 7.4f;
 		if (pJug.x < -11.0f) pJug.x = -11.0f;
 		if (pJug.z > 16.0f) pJug.z = 16.0f;
-		if (pJug.z < -16.0f) pJug.z = -16.0f;
+		if (pJug.z < 1.0f) pJug.z = 1.0f;       // la red esta en z = 0: el jugador no puede cruzarla
 	}
 
 	// Camara de transmision: Q y E la giran alrededor de la cancha, Z y X la acercan o la alejan
@@ -753,6 +753,22 @@ void DoMovement()
 	if (modoCamara == 0 && (keys[GLFW_KEY_D] || keys[GLFW_KEY_RIGHT]))
 	{
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+	}
+
+	// La camara en primera persona no atraviesa el piso ni la red, y no sale del estadio
+	if (modoCamara == 0)
+	{
+		glm::vec3 pc = camera.GetPosition();
+		if (pc.y < 0.4f) pc.y = 0.4f;
+		if (pc.y > 25.0f) pc.y = 25.0f;
+		if (pc.x > 30.0f) pc.x = 30.0f;
+		if (pc.x < -30.0f) pc.x = -30.0f;
+		if (pc.z > 30.0f) pc.z = 30.0f;
+		if (pc.z < -30.0f) pc.z = -30.0f;
+		// Red: mide 1.04 m de alto y llega hasta los postes (|x| < 6.8)
+		if (fabs(pc.z) < 0.3f && fabs(pc.x) < 6.8f && pc.y < 1.15f)
+			pc.z = (pc.z >= 0.0f) ? 0.3f : -0.3f;
+		camera.SetPosition(pc);
 	}
 }
 
