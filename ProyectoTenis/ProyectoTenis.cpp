@@ -72,6 +72,9 @@ bool lucesOn = false;
 // Dia o noche (tecla N)
 bool esDia = true;
 
+// Linterna: luz spot que sale de la camara y apunta hacia donde mira (tecla O)
+bool linternaOn = false;
+
 float vertices[] = {
 	-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 	 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -238,15 +241,16 @@ int main()
 			glUniform1f(glGetUniformLocation(lightingShader.Program, (luzI + ".quadratic").c_str()), 0.0019f);
 		}
 
-		// SpotLight (apagada por ahora)
+		// SpotLight: linterna de la camara (tecla O la enciende y la apaga)
+		float luzLinterna = linternaOn ? 1.0f : 0.0f;
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.position"), camera.GetPosition().x, camera.GetPosition().y, camera.GetPosition().z);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.direction"), camera.GetFront().x, camera.GetFront().y, camera.GetFront().z);
 		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.ambient"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 0.0f, 0.0f, 0.0f);
-		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.specular"), 0.0f, 0.0f, 0.0f);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.diffuse"), 1.0f * luzLinterna, 0.95f * luzLinterna, 0.8f * luzLinterna);
+		glUniform3f(glGetUniformLocation(lightingShader.Program, "spotLight.specular"), 1.0f * luzLinterna, 1.0f * luzLinterna, 1.0f * luzLinterna);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.constant"), 1.0f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.linear"), 0.3f);
-		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.quadratic"), 0.7f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.linear"), 0.09f);
+		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.quadratic"), 0.032f);
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.cutOff"), glm::cos(glm::radians(12.0f)));
 		glUniform1f(glGetUniformLocation(lightingShader.Program, "spotLight.outerCutOff"), glm::cos(glm::radians(18.0f)));
 
@@ -413,6 +417,12 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	if (GLFW_KEY_N == key && GLFW_PRESS == action)
 	{
 		esDia = !esDia;
+	}
+
+	// O: enciende o apaga la linterna (luz spot)
+	if (GLFW_KEY_O == key && GLFW_PRESS == action)
+	{
+		linternaOn = !linternaOn;
 	}
 
 	if (key >= 0 && key < 1024)
