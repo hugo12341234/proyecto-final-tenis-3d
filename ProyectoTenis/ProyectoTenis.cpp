@@ -72,6 +72,9 @@ bool lucesOn = false;
 // Dia o noche (tecla N)
 bool esDia = true;
 
+// Puntos del jugador 1: 0, 15, 30, 40 y JUEGO (tecla M)
+int puntos = 0;
+
 // Linterna: luz spot que sale de la camara y apunta hacia donde mira (tecla O)
 bool linternaOn = false;
 
@@ -172,6 +175,14 @@ int main()
 	Model Tablero3((char*)"Models/tablero_3.obj");
 	Model *Tableros[3] = { &Tablero1, &Tablero2, &Tablero3 };
 	Model Torre((char*)"Models/torre.obj");
+
+	// Marcadores (uno por cada puntuacion)
+	Model Marcador0((char*)"Models/marcador_0.obj");
+	Model Marcador1((char*)"Models/marcador_1.obj");
+	Model Marcador2((char*)"Models/marcador_2.obj");
+	Model Marcador3((char*)"Models/marcador_3.obj");
+	Model Marcador4((char*)"Models/marcador_4.obj");
+	Model *Marcadores[5] = { &Marcador0, &Marcador1, &Marcador2, &Marcador3, &Marcador4 };
 
 	// Cubo para dibujar las lamparas (VAO y VBO como en las practicas)
 	GLuint VBO, VAO;
@@ -346,6 +357,12 @@ int main()
 			Torre.Draw(lightingShader);
 		}
 
+		// Marcador (muestra los puntos del jugador 1)
+		model = glm::mat4(1);
+		model = glm::translate(model, glm::vec3(0.0f, 4.5f, -19.6f));
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		Marcadores[puntos]->Draw(lightingShader);
+
 		// Dibujar las lamparas de los reflectores
 		lampShader.Use();
 		modelLoc = glGetUniformLocation(lampShader.Program, "model");
@@ -423,6 +440,12 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mode
 	if (GLFW_KEY_O == key && GLFW_PRESS == action)
 	{
 		linternaOn = !linternaOn;
+	}
+
+	// M: suma un punto al jugador 1 (0, 15, 30, 40 y JUEGO) y hace crecer el marcador un instante
+	if (GLFW_KEY_M == key && GLFW_PRESS == action)
+	{
+		puntos = (puntos + 1) % 5;
 	}
 
 	if (key >= 0 && key < 1024)

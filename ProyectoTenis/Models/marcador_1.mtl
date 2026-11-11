@@ -1,0 +1,27 @@
+newmtl marco
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 10.0
+d 1.0
+illum 2
+map_Kd c_negro.png
+
+newmtl panel
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 10.0
+d 1.0
+illum 2
+map_Kd marcador_1.png
+
+newmtl metal
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.0 0.0 0.0
+Ns 10.0
+d 1.0
+illum 2
+map_Kd metal.jpg
+
