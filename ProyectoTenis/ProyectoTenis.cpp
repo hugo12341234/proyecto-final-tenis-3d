@@ -311,6 +311,11 @@ void interpolation(void)
 	KeyFrame[playIndex].incPelZ = (KeyFrame[playIndex + 1].pelZ - KeyFrame[playIndex].pelZ) / i_max_steps;
 }
 
+// Caminata del jugador
+bool caminando = false;
+float swing = 0.0f;         // angulo de las piernas al caminar
+bool pasoAdelante = true;
+
 // Deltatime
 GLfloat deltaTime = 0.0f;	// Time between current frame and last frame
 GLfloat lastFrame = 0.0f;  	// Time of last frame
@@ -630,6 +635,42 @@ int main()
 // Moves/alters the camera positions based on user input
 void DoMovement()
 {
+	// Controles del jugador (mismas teclas que el perro de la practica 10)
+	caminando = false;
+	if (!play)
+	{
+		if (keys[GLFW_KEY_Y])
+		{
+			pJug.z -= 0.05f;
+			pJug.rotY = 180.0f;
+			caminando = true;
+		}
+		if (keys[GLFW_KEY_H])
+		{
+			pJug.z += 0.05f;
+			pJug.rotY = 0.0f;
+			caminando = true;
+		}
+		if (keys[GLFW_KEY_G])
+		{
+			pJug.x -= 0.05f;
+			pJug.rotY = -90.0f;
+			caminando = true;
+		}
+		if (keys[GLFW_KEY_J])
+		{
+			pJug.x += 0.05f;
+			pJug.rotY = 90.0f;
+			caminando = true;
+		}
+
+		// Limites del area de juego
+		if (pJug.x > 7.4f) pJug.x = 7.4f;
+		if (pJug.x < -11.0f) pJug.x = -11.0f;
+		if (pJug.z > 16.0f) pJug.z = 16.0f;
+		if (pJug.z < -16.0f) pJug.z = -16.0f;
+	}
+
 	// Camera controls
 	if (keys[GLFW_KEY_W] || keys[GLFW_KEY_UP])
 	{
@@ -759,6 +800,33 @@ void Animation()
 		pelX = pJug.x + 0.26f * cos(r);
 		pelY = pJug.y + 0.83f;
 		pelZ = pJug.z - 0.26f * sin(r);
+
+		// Caminata: las piernas y los brazos se balancean mientras el jugador avanza
+		if (caminando)
+		{
+			if (pasoAdelante)
+			{
+				swing += 2.0f;
+				if (swing > 30.0f)
+					pasoAdelante = false;
+			}
+			else
+			{
+				swing -= 2.0f;
+				if (swing < -30.0f)
+					pasoAdelante = true;
+			}
+		}
+		else
+		{
+			swing = 0.0f;
+		}
+		pJug.pierDer = swing;
+		pJug.pierIzq = -swing;
+		pJug.rodDer = (swing > 0.0f) ? swing * 1.2f : 0.0f;
+		pJug.rodIzq = (swing < 0.0f) ? -swing * 1.2f : 0.0f;
+		pJug.brDer = -swing * 0.8f;
+		pJug.brIzq = swing * 0.8f;
 	}
 }
 
