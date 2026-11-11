@@ -867,6 +867,10 @@ void Animation()
 				std::cout << "termina anim" << std::endl;
 				playIndex = 0;
 				play = false;
+
+				// El servicio llego al otro lado de la red: es un punto para el jugador 1
+				puntos = (puntos + 1) % 5;
+				pulso = 1.25f;
 			}
 			else //Next frame interpolations
 			{

@@ -33,7 +33,7 @@ Escenario 3D interactivo de una cancha de tenis hecho con OpenGL moderno (3.3) e
 | Q / E | Girar la cámara de transmisión alrededor de la cancha |
 | Z / X | Acercar / alejar la cámara de transmisión |
 | Y H G J | Mover al jugador (adelante, atrás, izquierda, derecha); camina con animación |
-| L | Servicio del jugador (animación por keyframes) |
+| L | Servicio del jugador (animación por keyframes). Al terminar suma un punto al marcador |
 | F | Encender / apagar los 4 reflectores |
 | N | Cambiar entre día y noche |
 | O | Encender / apagar la linterna (luz spot que sigue a la cámara) |
